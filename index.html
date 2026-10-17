@@ -1,0 +1,260 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOOLBOX NEON | Akıllı Ürün Asistanı</title>
+<style>
+:root {
+  --bg:#070b16; --panel:#10182a; --cyan:#42f5e9;
+  --pink:#ff4fd8; --text:#edf5ff; --muted:#9aabc5;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; min-height:100vh; color:var(--text);
+  font-family:Arial,sans-serif;
+  background:radial-gradient(circle at 10% 0%,#13264a,transparent 35%),
+  radial-gradient(circle at 90% 30%,#30143e,transparent 30%),var(--bg);
+}
+header { text-align:center; padding:30px 15px; border-bottom:1px solid #263650; }
+.logo { font-size:clamp(28px,5vw,44px); font-weight:900; color:var(--cyan); letter-spacing:2px; text-shadow:0 0 20px #42f5e988; }
+header p { color:var(--muted); }
+main { width:min(950px,94%); margin:25px auto 50px; display:grid; gap:18px; }
+.card { background:#10182aee; border:1px solid #293955; border-radius:17px; padding:22px; box-shadow:0 0 25px #0005; }
+h2 { color:var(--cyan); margin-top:0; }
+label { display:block; margin:14px 0 7px; color:#c7d7ed; }
+input,button { width:100%; padding:13px; border-radius:10px; font:inherit; }
+input { background:#070d1b; border:1px solid #354565; color:white; }
+button { border:0; background:linear-gradient(100deg,var(--cyan),#86a7ff); color:#06101a; font-weight:bold; cursor:pointer; }
+button.secondary { background:#1b2941; border:1px solid #3a4c6d; color:white; }
+button:disabled { opacity:.55; }
+.row { display:flex; gap:10px; margin-top:10px; }
+.row > * { flex:1; min-width:0; }
+.note { color:var(--muted); font-size:14px; line-height:1.5; }
+#camera { display:none; width:100%; max-height:350px; object-fit:cover; border-radius:12px; margin-top:12px; background:#000; }
+#preview { display:none; max-width:100%; max-height:240px; margin-top:12px; border-radius:10px; }
+.status { margin-top:12px; color:#7cff9b; white-space:pre-wrap; overflow-wrap:anywhere; }
+.error { color:#ff9aab; }
+#results { display:none; }
+.facts { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+.fact { background:#0a1120; border:1px solid #293955; border-radius:12px; padding:14px; }
+.fact h3 { color:var(--pink); font-size:13px; text-transform:uppercase; }
+.fact p { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.5; }
+footer { text-align:center; padding:0 15px 25px; color:var(--muted); font-size:12px; }
+@media(max-width:560px) { .row { flex-direction:column; } .card { padding:16px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">TOOLBOX NEON</div>
+  <p>Ürünü tara · Bilgilerini öğren · Yapay zekâ ile analiz et</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2>01 / Barkod okuyucu</h2>
+    <p class="note">Barkodu kamerayla okut veya numarasını yaz.</p>
+    <div class="row">
+      <input id="barcode" placeholder="Barkod numarası" inputmode="numeric">
+      <button id="lookup">Ürünü bul</button>
+    </div>
+    <div class="row">
+      <button id="startCamera" class="secondary">Kamerayı aç</button>
+      <button id="stopCamera" class="secondary" disabled>Kamerayı kapat</button>
+    </div>
+    <video id="camera" playsinline muted></video>
+    <div id="status" class="status" role="status"></div>
+    <p id="summary" class="note"></p>
+  </section>
+
+  <section class="card">
+    <h2>02 / Yapay zekâ ile ürün analizi</h2>
+    <p class="note">
+      Ürünün özellikle içindekiler ve tarih yazan etiketinin net fotoğrafını yükle.
+      Yapay zekâ fotoğrafta okuyabildiği bilgileri çıkarır.
+    </p>
+    <label for="photo">Ambalaj fotoğrafı</label>
+    <input id="photo" type="file" accept="image/*" capture="environment">
+    <img id="preview" alt="Yüklenen ürün fotoğrafı">
+    <label for="extra">Ek bilgi (isteğe bağlı)</label>
+    <input id="extra" placeholder="Örn. tarihi özellikle kontrol et">
+    <div class="row">
+      <button id="analyze">Yapay zekâ ile analiz et</button>
+    </div>
+    <div id="aiStatus" class="status" role="status"></div>
+  </section>
+
+  <section class="card" id="results">
+    <h2>03 / Ürün raporu</h2>
+    <div class="facts">
+      <div class="fact"><h3>Ürün adı</h3><p id="name">—</p></div>
+      <div class="fact"><h3>İçindekiler</h3><p id="ingredients">—</p></div>
+      <div class="fact"><h3>Nasıl üretilir?</h3><p id="made">—</p></div>
+      <div class="fact"><h3>Son tüketim tarihi</h3><p id="date">—</p></div>
+      <div class="fact"><h3>Üretici / üretim yeri</h3><p id="origin">—</p></div>
+      <div class="fact"><h3>Açıklamalar</h3><p id="notes">—</p></div>
+    </div>
+    <p class="note">
+      Barkod genellikle son tüketim tarihini içermez. Tarihi ambalajdan doğrula.
+      Yapay zekâ tarafından okunamayan tarihler tahmin edilmez.
+    </p>
+  </section>
+</main>
+
+<footer>
+  TOOLBOX NEON · Bilgiler eksik veya hatalı olabilir; ambalajı kontrol edin.
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+let productData = null;
+let stream = null;
+let detector = null;
+let scanTimer = null;
+
+function status(id, message, error=false) {
+  $(id).textContent = message;
+  $(id).className = error ? "status error" : "status";
+}
+function field(id, value) {
+  $(id).textContent = value && String(value).trim()
+    ? String(value) : "Bilgi bulunamadı";
+}
+function showResults() {
+  $("results").style.display = "block";
+}
+function showProduct(p) {
+  productData = p || {};
+  showResults();
+  field("name", p.product_name || p.product_name_tr || p.generic_name);
+  field("ingredients", p.ingredients_text_tr || p.ingredients_text);
+  field("made", "Üretim bilgisi için ambalaj fotoğrafıyla yapay zekâ analizini çalıştır.");
+  field("date", "Barkoddan genellikle okunamaz. Ambalaj fotoğrafı yükle.");
+  field("origin", [p.brands,p.origins,p.manufacturing_places].filter(Boolean).join(" · "));
+  field("notes", p.categories || "Barkod kaydı tek başına ürünün tüm bilgilerini doğrulamaz.");
+}
+
+async function lookupBarcode() {
+  const code = $("barcode").value.trim();
+  if (!code) return status("status","Önce barkod numarası gir.",true);
+  $("lookup").disabled = true;
+  status("status","Ürün veri tabanında aranıyor...");
+  try {
+    const r = await fetch("https://world.openfoodfacts.org/api/v2/product/" +
+      encodeURIComponent(code) + ".json");
+    if (!r.ok) throw new Error("Veri tabanına ulaşılamadı.");
+    const data = await r.json();
+    if (data.status === 1 && data.product) {
+      showProduct(data.product);
+      status("status","Ürün bulundu. Eksik bilgiler için etiket fotoğrafı yükleyebilirsin.");
+      $("summary").textContent = data.product.product_name || "";
+    } else {
+      showProduct({});
+      status("status","Bu barkod için kayıt bulunamadı. Ambalaj fotoğrafını analiz ettirebilirsin.");
+    }
+  } catch(e) {
+    status("status","Ürün aranamadı. İnternet bağlantını kontrol et.",true);
+  } finally {
+    $("lookup").disabled = false;
+  }
+}
+$("lookup").addEventListener("click",lookupBarcode);
+$("barcode").addEventListener("keydown",e => {
+  if(e.key === "Enter") lookupBarcode();
+});
+
+$("photo").addEventListener("change",() => {
+  const file = $("photo").files[0];
+  if (!file) return;
+  $("preview").src = URL.createObjectURL(file);
+  $("preview").style.display = "block";
+});
+
+function stopCamera() {
+  if(scanTimer) clearInterval(scanTimer);
+  scanTimer = null;
+  if(stream) stream.getTracks().forEach(t => t.stop());
+  stream = null;
+  $("camera").srcObject = null;
+  $("camera").style.display = "none";
+  $("startCamera").disabled = false;
+  $("stopCamera").disabled = true;
+}
+$("stopCamera").addEventListener("click",stopCamera);
+
+$("startCamera").addEventListener("click",async () => {
+  if (!("BarcodeDetector" in window)) {
+    return status("status","Tarayıcın barkod taramayı desteklemiyor. Barkodu elle yazabilirsin.",true);
+  }
+  try {
+    detector = new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e"]});
+    stream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:"environment"},audio:false
+    });
+    $("camera").srcObject = stream;
+    $("camera").style.display = "block";
+    await $("camera").play();
+    $("startCamera").disabled = true;
+    $("stopCamera").disabled = false;
+    status("status","Kamerayı barkoda tut.");
+    scanTimer = setInterval(async () => {
+      if (!stream || $("camera").readyState < 2) return;
+      try {
+        const codes = await detector.detect($("camera"));
+        if(codes.length && codes[0].rawValue) {
+          $("barcode").value = codes[0].rawValue;
+          stopCamera();
+          lookupBarcode();
+        }
+      } catch(e) {}
+    },500);
+  } catch(e) {
+    status("status","Kamera açılamadı. Tarayıcı izinlerini kontrol et.",true);
+  }
+});
+
+$("analyze").addEventListener("click",async () => {
+  const file = $("photo").files[0];
+  if (!file) return status("aiStatus","Önce ürün etiketinin fotoğrafını yükle.",true);
+  if (file.size > 8*1024*1024) return status("aiStatus","Fotoğraf 8 MB'dan küçük olmalı.",true);
+
+  $("analyze").disabled = true;
+  status("aiStatus","Fotoğraf analiz ediliyor...");
+  try {
+    const image = await new Promise((resolve,reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    const response = await fetch("/.netlify/functions/analyze",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        image,
+        barcode:$("barcode").value.trim(),
+        product:productData,
+        extra:$("extra").value.trim()
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Analiz başarısız oldu.");
+    const a = result.analysis || {};
+    showResults();
+    field("name",a.product_name || (productData && productData.product_name));
+    field("ingredients",a.ingredients);
+    field("made",a.how_made);
+    field("date",a.expiry_date);
+    field("origin",a.manufacturer_or_origin);
+    field("notes",[a.confidence,a.notes].filter(Boolean).join("\n\n"));
+    status("aiStatus","Analiz tamamlandı. Bilgileri ambalajla karşılaştır.");
+  } catch(e) {
+    status("aiStatus",e.message + " Netlify ve API ayarlarını kontrol et.",true);
+  } finally {
+    $("analyze").disabled = false;
+  }
+});
+</script>
+</body>
+</html>
